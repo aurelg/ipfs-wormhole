@@ -18,15 +18,19 @@ send)
   echo "Send..."
   PASSWORD=$(pwgen -1 20)
   FILE=${2:-}
-  TAG=$(cat "$FILE" |
-    gpg --batch --passphrase="$PASSWORD" -c -o - |
+  TAG=$(gpg --batch --passphrase="$PASSWORD" -c -o - "$FILE" |
     ipfs add -Q)
-  echo "Retrieve with $0 receive $TAG$PASSWORD"
+  FILENAME="$(echo "$FILE" | base64)"
+  echo "Retrieve with $0 receive $TAG$PASSWORD$FILENAME"
   exit 0
   ;;
 receive)
-  echo "Receive..."
-  ipfs cat "${2:0:46}" | gpg --batch --passphrase="${2:46:66}" -d 2>/dev/null
+  DSTFILENAME="$(echo "${2:66}" | base64 -d)"
+  echo "Receiving $DSTFILENAME..."
+  ipfs cat "${2:0:46}" |
+    gpg --batch --passphrase="${2:46:20}" -d \
+      >"$DSTFILENAME" \
+      2>/dev/null
   exit 0
   ;;
 esac
