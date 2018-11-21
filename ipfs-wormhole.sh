@@ -5,8 +5,8 @@ IFS=$'\n\t'
 # Send/receive encrypted files using IPFS.
 #
 # The file to send is encrypted with a temporary password, and added to IPFS.
-# The IPFS hash and the password are merged in a key, which can be used to
-# retrieve an decrypt the content of the file.
+# The IPFS hash, the password and the file name are merged in a key, which can
+# be used to retrieve, decrypt and save the content of the file.
 #
 # Dependencies:
 # - pwgen
