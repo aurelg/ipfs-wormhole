@@ -1,6 +1,8 @@
 # ipfs-wormhole
 
-Get things from one computer to another, safely. Over IPFS.
+Get things from one computer to another, safely. Over IPFS (which is not even
+required to receive files thanks to the [Cloudflare IPFS
+gateway](https://cloudflare-ipfs.com)).
 
 Inspired by [magic-wormhole](https://github.com/warner/magic-wormhole) and
 [dat-cp](https://github.com/tom-james-watson/dat-cp). Initially published
@@ -28,7 +30,9 @@ On machine B:
 ipfs-wormhole.sh receive <tag>
 ```
 
-Will retrieve the file over IPFS, decrypt it and save it locally.
+Will retrieve the file over IPFS if IPFS is installed and running, or if it's
+not, over HTTPS thanks to the [Cloudflare IPFS
+gateway](https://cloudflare-ipfs.com), decrypt it and save it locally.
 
 ## Check dependencies
 

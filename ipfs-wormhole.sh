@@ -66,17 +66,26 @@ send)
   ;;
 receive)
   GPGCMD="$(checkdep gpg)"
-  IPFSCMD="$(checkdep ipfs)"
   DSTFILENAME="$(echo "${2:66}" | base64 -d)"
   if [ -f "$DSTFILENAME" ]; then
     echo "File $DSTFILENAME already exists, aborting..."
     exit 1
   fi
-  echo "Receiving $DSTFILENAME..."
-  $IPFSCMD cat "${2:0:46}" |
-    $GPGCMD --batch --passphrase="${2:46:20}" -d \
-      >"$DSTFILENAME" \
-      2>/dev/null
+  if pgrep ipfs 1>/dev/null 2>&1; then
+    IPFSCMD="$(checkdep ipfs)"
+    echo "Receiving $DSTFILENAME over IPFS..."
+    $IPFSCMD cat "${2:0:46}" |
+      $GPGCMD --batch --passphrase="${2:46:20}" -d \
+        >"$DSTFILENAME" \
+        2>/dev/null
+  else
+    echo "Receiving $DSTFILENAME over HTTPS..."
+    WGETCMD="$(checkdep wget)"
+    $WGETCMD -qO - https://cloudflare-ipfs.com/ipfs/"${2:0:46}" |
+      $GPGCMD --batch --passphrase="${2:46:20}" -d \
+        >"$DSTFILENAME" \
+        2>/dev/null
+  fi
   exit 0
   ;;
 checkdeps)
@@ -97,32 +106,8 @@ update)
   exit 0
   ;;
 *)
-  cat <<EOM
-Get things from one computer to another, safely. Over IPFS.
-
-On machine A
-------------
-
-${0:-} send <file or directory>
-
-Will encrypt and add the file (or the directory as a compressed tarball) to
-IPFS, and output a tag. If xclip is installed, the command to retrieve it will
-be copied to the clipboard.
-
-On machine B
-------------
-
-${0:-} receive <tag>
-
-Check dependencies
------------------------
-
-${0:-} checkdeps
-
-Update from github repo
------------------------
-
-${0:-} update
-EOM
+  WGETCMD="$(checkdep wget)"
+  $WGETCMD -O- -q \
+    https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/README.md
   ;;
 esac
