@@ -24,16 +24,23 @@ function checkdep() {
   echo "$CMDPATH"
 }
 
+# Generate Passwords, the default length is 40 characters
+
+function generate_password() {
+  set +o pipefail
+  tr </dev/urandom -dc A-Za-z0-9 | head -c${1:-40}
+  set -o pipefail
+}
+
 case "${1:-}" in
 
 send)
 
   # Get path to deps
-  PWGENCMD="$(checkdep pwgen)"
   TARCMD="$(checkdep tar)"
   GPGCMD="$(checkdep gpg)"
   IPFSCMD="$(checkdep ipfs)"
-  PASSWORD=$($PWGENCMD -1 $IWPASSWORDLENGTH)
+  PASSWORD="$(generate_password "${IWPASSWORDLENGTH}")"
 
   # Handle user input
   USERINPUT=${2:-}
@@ -142,7 +149,6 @@ receive)
 
 checkdeps)
   # Check if all dependencies are installed
-  PWGENCMD="$(checkdep pwgen)"
   TARCMD="$(checkdep tar)"
   GPGCMD="$(checkdep gpg)"
   IPFSCMD="$(checkdep ipfs)"
