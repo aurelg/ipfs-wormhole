@@ -68,9 +68,10 @@ symmetric cipher (it's up to you to change it), and `pwgen`.
 
 ## Who owns my data once I use ipfs-wormhole?
 
-Yes. `ipfs-wormhole` is end-to-end encrypted with `gpg`.
+TL;DR no one except the sender and the recipient. `ipfs-wormhole` is end-to-end
+encrypted with `gpg`.
 
 ## Where does it store my data?
 
-Yourself. Your data are routed the sender's machine to the recipient's machine
-over [IPFS](https://ipfs.io).
+Your data are provided by the sender's machine and routed to the recipient's
+machine over [IPFS](https://ipfs.io).
