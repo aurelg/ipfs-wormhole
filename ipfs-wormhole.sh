@@ -10,8 +10,10 @@ IFS=$'\n\t'
 #
 # Dependencies:
 # - pwgen
+# - tar
 # - gpg
 # - ipfs
+# - wget
 
 # Check deps
 
