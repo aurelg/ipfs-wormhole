@@ -75,20 +75,25 @@ update)
   cat <<EOM
 Get things from one computer to another, safely. Over IPFS.
 
-On machine A:
--------------
+On machine A
+------------
 
 ${0:-} send <filename>
 
 # Will encrypt and add the file to IPFS, and output a tag (and copy it to the
 # clipboard if xclip is installed)
 
-On machine B:
--------------
+On machine B
+------------
 
 ${0:-} receive <tag>
 
 # Will retrieve the file over IPFS, decrypt it and save it locally.
+
+Update from github repo
+-----------------------
+
+${0:-} update
 EOM
   ;;
 esac
