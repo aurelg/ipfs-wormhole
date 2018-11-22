@@ -17,6 +17,7 @@ IFS=$'\n\t'
 
 set +e
 PWGENCMD="$(command -v pwgen)"
+TARCMD="$(command -v tar)"
 GPGCMD="$(command -v gpg)"
 IPFSCMD="$(command -v ipfs)"
 set +e
@@ -24,6 +25,10 @@ set +e
 ERROR=0
 if [ -z "$PWGENCMD" ]; then
   echo pwgen not found
+  ERROR=1
+fi
+if [ -z "$TARCMD" ]; then
+  echo tar not found
   ERROR=1
 fi
 if [ -z "$GPGCMD" ]; then
@@ -39,16 +44,28 @@ fi
 
 case "${1:-}" in
 send)
-  echo "Send..."
   PASSWORD=$($PWGENCMD -1 20)
   FILE=${2:-}
-  TAG=$($GPGCMD --batch --passphrase="$PASSWORD" -c -o - "$FILE" |
-    $IPFSCMD add -Q)
+  if [ -d "$FILE" ]; then
+    TAG=$(
+      $TARCMD -Jc "$FILE" | $GPGCMD --batch --passphrase="$PASSWORD" \
+        -c -o - | $IPFSCMD add -Q
+    )
+    FILE="$FILE".tar.xz
+    echo "Directory compressed and sent as $FILE."
+  elif [ -f "$FILE" ]; then
+    TAG=$($GPGCMD --batch --passphrase="$PASSWORD" -c -o - "$FILE" |
+      $IPFSCMD add -Q)
+    echo "File $FILE sent."
+  else
+    echo "error: $FILE is neither a file, nor a directory"
+    exit 1
+  fi
   FILENAME="$(echo "$FILE" | base64)"
   RECEIVECMD="$0 receive $TAG$PASSWORD$FILENAME"
-  echo "Retrieve with $RECEIVECMD"
+  echo "Retrieve it with $RECEIVECMD"
   set +e
-  XCLIPCMD="$(command -v xclipe)"
+  XCLIPCMD="$(command -v xclip)"
   set -e
   if [ -n "$XCLIPCMD" ]; then
     echo "$RECEIVECMD" | $XCLIPCMD
@@ -58,6 +75,10 @@ send)
   ;;
 receive)
   DSTFILENAME="$(echo "${2:66}" | base64 -d)"
+  if [ -f "$DSTFILENAME" ]; then
+    echo "File $DSTFILENAME already exists, aborting..."
+    exit 1
+  fi
   echo "Receiving $DSTFILENAME..."
   $IPFSCMD cat "${2:0:46}" |
     $GPGCMD --batch --passphrase="${2:46:20}" -d \
