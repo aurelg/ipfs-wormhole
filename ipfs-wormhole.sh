@@ -4,6 +4,9 @@ IFS=$'\n\t'
 
 # See <https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/README.md>
 
+PASSWORDLENGTH=40
+IPFSGATEWAY=https://cloudflare-ipfs.com/ipfs
+
 # Check deps
 
 function checkdep() {
@@ -23,7 +26,7 @@ send)
   TARCMD="$(checkdep tar)"
   GPGCMD="$(checkdep gpg)"
   IPFSCMD="$(checkdep ipfs)"
-  PASSWORD=$($PWGENCMD -1 20)
+  PASSWORD=$($PWGENCMD -1 $PASSWORDLENGTH)
   USERINPUT=${2:-}
   FILE=${USERINPUT%/}
   if ! pgrep ipfs 1>/dev/null 2>&1; then
@@ -47,7 +50,7 @@ send)
     exit 1
   fi
   FILENAME="$(echo "$FILE" | base64)"
-  FULLTAG="$TAG$PASSWORD$FILENAME"
+  FULLTAG="$TAG-$PASSWORD-$FILENAME"
   RECEIVECMD="$0 receive $FULLTAG"
   echo "Retrieve it with $RECEIVECMD"
   set +e
@@ -61,7 +64,11 @@ send)
   ;;
 receive)
   GPGCMD="$(checkdep gpg)"
-  DSTFILENAME="$(echo "${2:66}" | base64 -d)"
+  USERINPUT=${2:-}
+  IPFSHASH=${USERINPUT%%-*}
+  DSTFILENAME="$(echo "${USERINPUT##*-}" | base64 -d)"
+  PASSWORD=${USERINPUT%-*}
+  PASSWORD=${PASSWORD#*-}
   if [ -s "$DSTFILENAME" ]; then
     echo "File $DSTFILENAME already exists, aborting..."
     exit 1
@@ -69,15 +76,15 @@ receive)
   if pgrep ipfs 1>/dev/null 2>&1; then
     IPFSCMD="$(checkdep ipfs)"
     echo "Receiving $DSTFILENAME over IPFS..."
-    $IPFSCMD cat "${2:0:46}" |
-      $GPGCMD --batch --passphrase="${2:46:20}" -d \
+    $IPFSCMD cat "$IPFSHASH" |
+      $GPGCMD --batch --passphrase="$PASSWORD" -d \
         >"$DSTFILENAME" \
         2>/dev/null
   else
     echo "Receiving $DSTFILENAME over HTTPS..."
     WGETCMD="$(checkdep wget)"
-    $WGETCMD -qO - https://cloudflare-ipfs.com/ipfs/"${2:0:46}" |
-      $GPGCMD --batch --passphrase="${2:46:20}" -d \
+    $WGETCMD -qO - "$IPFSGATEWAY"/"$IPFSHASH" |
+      $GPGCMD --batch --passphrase="$PASSWORD" -d \
         >"$DSTFILENAME" \
         2>/dev/null
   fi
