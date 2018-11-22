@@ -17,40 +17,23 @@ IFS=$'\n\t'
 
 # Check deps
 
-set +e
-PWGENCMD="$(command -v pwgen)"
-TARCMD="$(command -v tar)"
-GPGCMD="$(command -v gpg)"
-IPFSCMD="$(command -v ipfs)"
-WGETCMD="$(command -v wget)"
-set +e
-
-ERROR=0
-if [ -z "$PWGENCMD" ]; then
-  echo pwgen not found
-  ERROR=1
-fi
-if [ -z "$TARCMD" ]; then
-  echo tar not found
-  ERROR=1
-fi
-if [ -z "$GPGCMD" ]; then
-  echo gpg not found
-  ERROR=1
-fi
-if [ -z "$IPFSCMD" ]; then
-  echo ipfs not found
-  ERROR=1
-fi
-if [ -z "$WGETCMD" ]; then
-  echo wget not found
-  ERROR=1
-fi
-
-[ "$ERROR" -eq 1 ] && exit 1
+function checkdep() {
+  set +e
+  CMDPATH="$(command -v "${1:-}")"
+  set -e
+  if [ -z "$CMDPATH" ]; then
+    echo >&2 "${1:-} not found"
+    exit 1
+  fi
+  echo "$CMDPATH"
+}
 
 case "${1:-}" in
 send)
+  PWGENCMD="$(checkdep pwgen)"
+  TARCMD="$(checkdep tar)"
+  GPGCMD="$(checkdep gpg)"
+  IPFSCMD="$(checkdep ipfs)"
   PASSWORD=$($PWGENCMD -1 20)
   FILE=${2:-}
   if [ -d "$FILE" ]; then
@@ -69,18 +52,21 @@ send)
     exit 1
   fi
   FILENAME="$(echo "$FILE" | base64)"
-  RECEIVECMD="$0 receive $TAG$PASSWORD$FILENAME"
+  FULLTAG="$TAG$PASSWORD$FILENAME"
+  RECEIVECMD="$0 receive $FULLTAG"
   echo "Retrieve it with $RECEIVECMD"
   set +e
   XCLIPCMD="$(command -v xclip)"
   set -e
   if [ -n "$XCLIPCMD" ]; then
-    echo "$RECEIVECMD" | $XCLIPCMD
+    echo "$FULLTAG" | $XCLIPCMD
     echo "Copied to clipboard"
   fi
   exit 0
   ;;
 receive)
+  GPGCMD="$(checkdep gpg)"
+  IPFSCMD="$(checkdep ipfs)"
   DSTFILENAME="$(echo "${2:66}" | base64 -d)"
   if [ -f "$DSTFILENAME" ]; then
     echo "File $DSTFILENAME already exists, aborting..."
@@ -93,7 +79,17 @@ receive)
       2>/dev/null
   exit 0
   ;;
+checkdeps)
+  PWGENCMD="$(checkdep pwgen)"
+  TARCMD="$(checkdep tar)"
+  GPGCMD="$(checkdep gpg)"
+  IPFSCMD="$(checkdep ipfs)"
+  WGETCMD="$(checkdep wget)"
+  echo "Everything looks good"
+  exit 0
+  ;;
 update)
+  WGETCMD="$(checkdep wget)"
   echo Update...
   $WGETCMD -O "${0:-}" \
     https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/ipfs-wormhole.sh
@@ -117,6 +113,11 @@ On machine B
 ------------
 
 ${0:-} receive <tag>
+
+Check dependencies
+-----------------------
+
+${0:-} checkdeps
 
 Update from github repo
 -----------------------

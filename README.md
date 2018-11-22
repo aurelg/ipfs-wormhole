@@ -30,6 +30,12 @@ ipfs-wormhole.sh receive <tag>
 
 Will retrieve the file over IPFS, decrypt it and save it locally.
 
+## Check dependencies
+
+```
+ipfs-wormhole.sh checkdeps
+```
+
 ## Update from the github repo
 
 ```
