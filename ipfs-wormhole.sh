@@ -97,6 +97,7 @@ update)
   echo Update...
   $WGETCMD -O "${0:-}" \
     https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/ipfs-wormhole.sh
+  chmod +x "${0:-}"
   exit 0
   ;;
 *)
