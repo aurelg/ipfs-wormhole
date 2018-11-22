@@ -24,7 +24,8 @@ send)
   GPGCMD="$(checkdep gpg)"
   IPFSCMD="$(checkdep ipfs)"
   PASSWORD=$($PWGENCMD -1 20)
-  FILE=${2:-}
+  USERINPUT=${2:-}
+  FILE=${USERINPUT%/}
   if ! pgrep ipfs 1>/dev/null 2>&1; then
     echo "IPFS is not running, starting the daemon and sleep 5 seconds"
     $IPFSCMD daemon &
