@@ -8,7 +8,7 @@ Inspired by [magic-wormhole](https://github.com/warner/magic-wormhole) and
 
 # Usage
 
-## Send a file
+## Send a file or a directory
 
 On machine A:
 
@@ -20,7 +20,7 @@ Will encrypt and add the file (or the directory as a compressed tarball) to
 IPFS, and output a tag. If xclip is installed, the command to retrieve it will
 be copied to the clipboard.
 
-## Receive a file
+## Receive a file or a directory (as a compressed tarball)
 
 On machine B:
 
