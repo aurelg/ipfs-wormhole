@@ -38,6 +38,18 @@ gateway](https://cloudflare-ipfs.com), decrypt it and save it locally.
 
 `ipfs-wormhole.sh update`
 
+## Parameters
+
+The default password length and IPFS gateway can be overidden by setting the
+environment variables IWPASSWORDLENGTH and IWIPFSGATEWAY, respectively.
+
+E.g.:
+
+- `IWPASSWORDLENGTH=50 ipfs-wormhole.sh send FILE` will use a longer password to
+  encrypt FILE (default length is 40).
+- `IWIPFSGATEWAY=https://gateway.ipfs.io/ipfs ipfs-wormhole.sh receive tag` will
+  use the official IPFS gateway (instead of Cloudflare's gateway) if `ipfs daemon` is not running.
+
 # How it works
 
 Your data is encrypted on the sender's machine, using `gpg` and its default

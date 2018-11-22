@@ -4,8 +4,12 @@ IFS=$'\n\t'
 
 # See <https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/README.md>
 
-PASSWORDLENGTH=40
-IPFSGATEWAY=https://cloudflare-ipfs.com/ipfs
+if [ -z "${IWPASSWORDLENGTH-}" ]; then
+  IWPASSWORDLENGTH=40
+fi
+if [ -z "${IWIPFSGATEWAY-}" ]; then
+  IWIPFSGATEWAY=https://cloudflare-ipfs.com/ipfs
+fi
 
 # Check deps
 
@@ -26,7 +30,7 @@ send)
   TARCMD="$(checkdep tar)"
   GPGCMD="$(checkdep gpg)"
   IPFSCMD="$(checkdep ipfs)"
-  PASSWORD=$($PWGENCMD -1 $PASSWORDLENGTH)
+  PASSWORD=$($PWGENCMD -1 $IWPASSWORDLENGTH)
   USERINPUT=${2:-}
   FILE=${USERINPUT%/}
   if ! pgrep ipfs 1>/dev/null 2>&1; then
@@ -83,7 +87,7 @@ receive)
   else
     echo "Receiving $DSTFILENAME over HTTPS..."
     WGETCMD="$(checkdep wget)"
-    $WGETCMD -qO - "$IPFSGATEWAY"/"$IPFSHASH" |
+    $WGETCMD -qO - "$IWIPFSGATEWAY"/"$IPFSHASH" |
       $GPGCMD --batch --passphrase="$PASSWORD" -d \
         >"$DSTFILENAME" \
         2>/dev/null
