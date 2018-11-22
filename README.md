@@ -13,11 +13,12 @@ Inspired by [magic-wormhole](https://github.com/warner/magic-wormhole) and
 On machine A:
 
 ```
-ipfs-wormhole.sh send <filename>
+ipfs-wormhole.sh send <file or directory>
 ```
 
-Will encrypt and add the file to IPFS, and output a tag (and copy it to the
-clipboard if xclip is installed).
+Will encrypt and add the file (or the directory as a compressed tarball) to
+IPFS, and output a tag. If xclip is installed, the command to retrieve it will
+be copied to the clipboard.
 
 ## Receive a file
 

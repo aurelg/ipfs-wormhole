@@ -107,17 +107,16 @@ Get things from one computer to another, safely. Over IPFS.
 On machine A
 ------------
 
-${0:-} send <filename>
+${0:-} send <file or directory>
 
-# Will encrypt and add the file to IPFS, and output a tag (and copy it to the
-# clipboard if xclip is installed)
+Will encrypt and add the file (or the directory as a compressed tarball) to
+IPFS, and output a tag. If xclip is installed, the command to retrieve it will
+be copied to the clipboard.
 
 On machine B
 ------------
 
 ${0:-} receive <tag>
-
-# Will retrieve the file over IPFS, decrypt it and save it locally.
 
 Update from github repo
 -----------------------
