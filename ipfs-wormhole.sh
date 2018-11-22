@@ -62,7 +62,7 @@ send)
 receive)
   GPGCMD="$(checkdep gpg)"
   DSTFILENAME="$(echo "${2:66}" | base64 -d)"
-  if [ -f "$DSTFILENAME" ]; then
+  if [ -s "$DSTFILENAME" ]; then
     echo "File $DSTFILENAME already exists, aborting..."
     exit 1
   fi
