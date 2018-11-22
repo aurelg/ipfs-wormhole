@@ -25,6 +25,7 @@ function checkdep() {
 }
 
 case "${1:-}" in
+
 send)
   PWGENCMD="$(checkdep pwgen)"
   TARCMD="$(checkdep tar)"
@@ -33,22 +34,28 @@ send)
   PASSWORD=$($PWGENCMD -1 $IWPASSWORDLENGTH)
   USERINPUT=${2:-}
   FILE=${USERINPUT%/}
+  if [ -z "${IWKEYBASEDENCRYPTION-}" ]; then
+    GPGCMDOPTS="-c"
+  else
+    GPGCMDOPTS="-e"
+  fi
   if ! pgrep ipfs 1>/dev/null 2>&1; then
     echo "IPFS is not running, starting the daemon and sleep 5 seconds"
     $IPFSCMD daemon &
     sleep 5
   fi
+  if [ "$GPGCMDOPTS" == "-c" ]; then
+    GPGCMDOPTS="--batch --passphrase=$PASSWORD $GPGCMDOPTS"
+  fi
   if [ -d "$FILE" ]; then
-    TAG=$(
-      $TARCMD -Jc "$FILE" | $GPGCMD --batch --passphrase="$PASSWORD" \
-        -c -o - | $IPFSCMD add -Q
-    )
+    IFS=' '
+    TAG=$($TARCMD -Jc "$FILE" | $GPGCMD $GPGCMDOPTS -o - | $IPFSCMD add -Q)
+    IFS=$'\n\t'
     FILE="$FILE".tar.xz
-    echo "Directory compressed and sent as $FILE."
   elif [ -f "$FILE" ]; then
-    TAG=$($GPGCMD --batch --passphrase="$PASSWORD" -c -o - "$FILE" |
-      $IPFSCMD add -Q)
-    echo "File $FILE sent."
+    IFS=' '
+    TAG=$($GPGCMD $GPGCMDOPTS -o - "$FILE" | $IPFSCMD add -Q)
+    IFS=$'\n\t'
   else
     echo "error: $FILE is neither a file, nor a directory"
     exit 1
@@ -56,16 +63,22 @@ send)
   FILENAME="$(echo "$FILE" | base64)"
   FULLTAG="$TAG-$PASSWORD-$FILENAME"
   RECEIVECMD="$0 receive $FULLTAG"
-  echo "Retrieve it with $RECEIVECMD"
   set +e
   XCLIPCMD="$(command -v xclip)"
   set -e
+  EXTRA=""
   if [ -n "$XCLIPCMD" ]; then
     echo "$FULLTAG" | $XCLIPCMD
-    echo "Copied to clipboard"
+    EXTRA="(copied to clipboard)"
   fi
+  echo
+  echo "$FILE sent, tag: $FULLTAG $EXTRA"
+  echo
+  echo "Retrieve it with $RECEIVECMD"
+  echo
   exit 0
   ;;
+
 receive)
   GPGCMD="$(checkdep gpg)"
   USERINPUT=${2:-}
@@ -94,6 +107,7 @@ receive)
   fi
   exit 0
   ;;
+
 checkdeps)
   PWGENCMD="$(checkdep pwgen)"
   TARCMD="$(checkdep tar)"
@@ -103,6 +117,7 @@ checkdeps)
   echo "Everything looks good"
   exit 0
   ;;
+
 update)
   WGETCMD="$(checkdep wget)"
   echo Update...
@@ -111,6 +126,7 @@ update)
   chmod +x "${0:-}"
   exit 0
   ;;
+
 *)
   WGETCMD="$(checkdep wget)"
   $WGETCMD -O- -q \
