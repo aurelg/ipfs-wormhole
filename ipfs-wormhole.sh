@@ -20,6 +20,7 @@ PWGENCMD="$(command -v pwgen)"
 TARCMD="$(command -v tar)"
 GPGCMD="$(command -v gpg)"
 IPFSCMD="$(command -v ipfs)"
+WGETCMD="$(command -v wget)"
 set +e
 
 ERROR=0
@@ -37,6 +38,10 @@ if [ -z "$GPGCMD" ]; then
 fi
 if [ -z "$IPFSCMD" ]; then
   echo ipfs not found
+  ERROR=1
+fi
+if [ -z "$WGETCMD" ]; then
+  echo wget not found
   ERROR=1
 fi
 
@@ -88,7 +93,7 @@ receive)
   ;;
 update)
   echo Update...
-  wget -O "${0:-}" \
+  $WGETCMD -O "${0:-}" \
     https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/ipfs-wormhole.sh
   exit 0
   ;;
