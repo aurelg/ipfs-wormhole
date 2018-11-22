@@ -2,18 +2,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# Send/receive encrypted files using IPFS.
-#
-# The file to send is encrypted with a temporary password, and added to IPFS.
-# The IPFS hash, the password and the file name are merged in a key, which can
-# be used to retrieve, decrypt and save the content of the file.
-#
-# Dependencies:
-# - pwgen
-# - tar
-# - gpg
-# - ipfs
-# - wget
+# See <https://raw.githubusercontent.com/aurelg/ipfs-wormhole/master/README.md>
 
 # Check deps
 
@@ -36,6 +25,11 @@ send)
   IPFSCMD="$(checkdep ipfs)"
   PASSWORD=$($PWGENCMD -1 20)
   FILE=${2:-}
+  if ! pgrep ipfs 1>/dev/null 2>&1; then
+    echo "IPFS is not running, starting the daemon and sleep 5 seconds"
+    $IPFSCMD daemon &
+    sleep 5
+  fi
   if [ -d "$FILE" ]; then
     TAG=$(
       $TARCMD -Jc "$FILE" | $GPGCMD --batch --passphrase="$PASSWORD" \
