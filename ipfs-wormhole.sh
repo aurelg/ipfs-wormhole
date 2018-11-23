@@ -24,11 +24,9 @@ function checkdep() {
   echo "$CMDPATH"
 }
 
-# Generate Passwords, the default length is 40 characters
-
+# Generate Password
 function generate_password() {
-  local TEMPPASSWORD=$(tr </dev/urandom -dc A-Za-z0-9 | head -c${1:-40})
-  echo "$TEMPPASSWORD"
+  echo "$(tr </dev/urandom -dc A-Za-z0-9 | head -c $1)"
 }
 
 case "${1:-}" in
