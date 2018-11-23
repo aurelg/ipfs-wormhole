@@ -12,16 +12,11 @@ if [ -z "${IWIPFSGATEWAY-}" ]; then
 fi
 
 # Check deps
-
 function checkdep() {
-  set +e
-  CMDPATH="$(command -v "${1:-}")"
-  set -e
-  if [ -z "$CMDPATH" ]; then
+  if ! command -pv "${1:-}"; then
     echo >&2 "${1:-} not found"
     exit 1
   fi
-  echo "$CMDPATH"
 }
 
 # Generate Password
