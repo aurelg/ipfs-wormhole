@@ -54,20 +54,22 @@ added to the `gpg` command line and to the `tag`.
 
 ### Asymmetric (key-based) encryption (sender only)
 
-`IWKEYBASEDENCRYPTION=<whateveryouwant>` can be used to replace the default
-symmetric encryption by `gpg`'s key-based asymmetric encryption. This removes
-the need for a secure side channel to send the `tag`, as the encrypted content
-can only be decrypted by the private key of the recipient(s) (a password still
-appear in the `tag`, but is useless).
+`IWIPFSENCRYPTION=<symmetric|asymmetric|no>` can be used :
 
-This is the most secure mode but is less easy to use than the symmetric
-encryption mode, that's why the latter is the default.
-
-e.g.: `IWKEYBASEDENCRYPTION=whateveryouwant ipfs-wormhole.sh send FILE`, the
-usual `gpg` prompt will ask you to choose the public key(s) of the recipient(s).
-
-Note: No specific configuration is required on the client side, as `gpg` is
-smart enough to ask for your passphrase if necessary.
+- to replace the default symmetric encryption by `gpg`'s key-based asymmetric
+  encryption. This removes the need for a secure side channel to send the `tag`,
+  as the encrypted content can only be decrypted by the private key of the
+  recipient(s) (a password still appear in the `tag`, but is useless). This is
+  the most secure mode but is less easy to use than the symmetric encryption
+  mode, that's why the latter is the default. E.g.:
+  `IWKEYBASEDENCRYPTION=asymmetric ipfs-wormhole.sh send FILE`, the usual
+  `gpg` prompt will ask you to choose the public key(s) of the recipient(s).
+  Note: No specific configuration is required on the client side, as `gpg` is
+  smart enough to ask for your passphrase if necessary.
+- to disable encryption completely. In this case, a direct link to the IPFS
+  gateway (see below) will be printed and copied to the clipboard. The
+  file/directory tarball can be retrieved from any browser, as the cost of
+  encryption, ala [transfer.sh](https://transfer.sh/).
 
 ### Fallback IPFS gateway (recipient only)
 

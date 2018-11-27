@@ -10,6 +10,9 @@ fi
 if [ -z "${IWIPFSGATEWAY-}" ]; then
   IWIPFSGATEWAY=https://cloudflare-ipfs.com/ipfs
 fi
+if [ -z "${IWIPFSENCRYPTION-}" ]; then
+  IWIPFSENCRYPTION="symmetric"
+fi
 
 # Check deps
 function checkdep() {
@@ -38,13 +41,6 @@ send)
   USERINPUT=${2:-}
   FILE=${USERINPUT%/}
 
-  # Choose between symmetric/asymmetric encryption
-  if [ -z "${IWKEYBASEDENCRYPTION-}" ]; then
-    GPGCMDOPTS="-c"
-  else
-    GPGCMDOPTS="-e"
-  fi
-
   # Check if ipfs is running and if no, start it
   if ! pgrep ipfs 1>/dev/null 2>&1; then
     echo "IPFS is not running, starting the daemon and sleep 5 seconds"
@@ -52,21 +48,39 @@ send)
     sleep 5
   fi
 
-  # Set passphrase for asymmetric encryption, if required
-  if [ "$GPGCMDOPTS" == "-c" ]; then
-    GPGCMDOPTS="--batch --passphrase=$PASSWORD $GPGCMDOPTS"
-  fi
+  # Choose between symmetric/asymmetric encryption
+  case ${IWIPFSENCRYPTION} in
+  symmetric)
+    # Set passphrase for asymmetric encryption, if required
+    ENCRYPTIONCMD="$GPGCMD --batch --passphrase=$PASSWORD -c -o -"
+    ;;
+  asymmetric)
+    # Will prompt for the public keys of recipients
+    ENCRYPTIONCMD="$GPGCMD -e -o -"
+    ;;
+  no)
+    # No encryption, `transfer.sh`-like mode, to allow a direct retrieval from
+    # the IPFS gateway
+    ENCRYPTIONCMD="cat"
+    ;;
+  *)
+    cat <<EOF
+ENCRYPTIONCMD should be either 'symmetric' (default), 'asymmetric' (advanced) or 'no' (ala transfer.sh)
+EOF
+    exit 1
+    ;;
+  esac
 
   if [ -d "$FILE" ]; then
     # If FILE is a directory (!): compress, encrypt and add to IFPS
     IFS=' '
-    TAG=$($TARCMD -Jc "$FILE" | $GPGCMD $GPGCMDOPTS -o - | $IPFSCMD add -Q)
+    TAG=$($TARCMD -Jc "$FILE" | $ENCRYPTIONCMD | $IPFSCMD add -Q)
     IFS=$'\n\t'
     FILE="$FILE".tar.xz
   elif [ -f "$FILE" ]; then
     # If FILE is a file :) : encrypt and add to IFPS
     IFS=' '
-    TAG=$($GPGCMD $GPGCMDOPTS -o - "$FILE" | $IPFSCMD add -Q)
+    TAG=$($ENCRYPTIONCMD "$FILE" | $IPFSCMD add -Q)
     IFS=$'\n\t'
   else
     # If FILE is neither a file or a directory, exit
@@ -74,15 +88,25 @@ send)
     exit 1
   fi
 
-  # Create the tag: <IPFSHASH>-<PASSWORD>-<BASE64 ENCODED FILENAME>
-  FILENAME="$(echo "$FILE" | base64)"
-  FULLTAG="$TAG-$PASSWORD-$FILENAME"
-  RECEIVECMD="$0 receive $FULLTAG"
+  EXTRA=""
+  if [ "$ENCRYPTIONCMD" == "cat" ]; then
+    # If no encryption was requested, just print out the URL of the IPFS gateway
+    # with the hash, and store it in the clipboard
+    RECEIVECMD="from $IWIPFSGATEWAY/$TAG"
+    FULLTAG="$IWIPFSGATEWAY/$TAG"
+  else
+    # If encryption is enabled:
+    # - Create the tag: <IPFSHASH>-<PASSWORD>-<BASE64 ENCODED FILENAME>
+    # - print out the link to retrieve the content with `ipfs-wormhole`
+    FULLTAG="$TAG-$PASSWORD-$(echo "$FILE" | base64)"
+    RECEIVECMD="with $0 receive $FULLTAG"
+  fi
 
-  # Check if xclip is available, and send the tag to the clipboard
+  # Check if xclip is available
   set +e
   XCLIPCMD="$(command -v xclip)"
   set -e
+  # Send the full tag to the clipboard
   EXTRA=""
   if [ -n "$XCLIPCMD" ]; then
     echo "$FULLTAG" | $XCLIPCMD
@@ -91,9 +115,9 @@ send)
 
   # Output
   echo
-  echo "$FILE sent, tag: $FULLTAG $EXTRA"
+  echo "$FILE sent, tag: $FULLTAG"
   echo
-  echo "Retrieve it with $RECEIVECMD"
+  echo "Retrieve it $RECEIVECMD $EXTRA"
   echo
 
   exit 0
