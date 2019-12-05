@@ -131,7 +131,15 @@ receive)
   # Handle user input
   USERINPUT=${2:-}
   IPFSHASH=${USERINPUT%%-*}
-  DSTFILENAME="$(echo "${USERINPUT##*-}" | base64 -d)"
+  case "$OSTYPE" in
+  linux-gnu)
+    BASE64FLAG="-d"
+    ;;
+  darwin*)
+    BASE64FLAG="-D"
+    ;;
+  esac
+  DSTFILENAME="$(echo "${USERINPUT##*-}" | base64 $BASE64FLAG)"
   PASSWORD=${USERINPUT%-*}
   PASSWORD=${PASSWORD#*-}
 
