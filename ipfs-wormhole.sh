@@ -88,6 +88,8 @@ EOF
     exit 1
   fi
 
+  CIDBASE32="$($IPFSCMD cid base32 "$TAG")"
+
   EXTRA=""
   if [ "$ENCRYPTIONCMD" == "cat" ]; then
     # If no encryption was requested, just print out the URL of the IPFS gateway
@@ -119,6 +121,7 @@ EOF
   echo
   echo "Retrieve it $RECEIVECMD $EXTRA"
   echo
+  echo "Or, with IPFS Companion: ipfs://$CIDBASE32"
 
   exit 0
   ;;
