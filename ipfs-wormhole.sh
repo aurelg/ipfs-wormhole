@@ -12,6 +12,7 @@ if [ -z "${IWIPFSGATEWAY-}" ]; then
 fi
 if [ -z "${IWIPFSENCRYPTION-}" ]; then
   IWIPFSENCRYPTION="symmetric"
+  echo "Using default encryption method, 'symmetric'. The environment variable IWIPFSENCRYPTION can be set to 'asymmetric' (advanced) or 'no' (ala transfer.sh)"
 fi
 
 # Check deps
@@ -53,15 +54,18 @@ send)
   symmetric)
     # Set passphrase for asymmetric encryption, if required
     ENCRYPTIONCMD="$GPGCMD --batch --passphrase=$PASSWORD -c -o -"
+    echo "Using symmetric encryption"
     ;;
   asymmetric)
     # Will prompt for the public keys of recipients
     ENCRYPTIONCMD="$GPGCMD -e -o -"
+    echo "Using asymetric GPG encryption"
     ;;
   no)
     # No encryption, `transfer.sh`-like mode, to allow a direct retrieval from
     # the IPFS gateway
     ENCRYPTIONCMD="cat"
+    echo "No encryption"
     ;;
   *)
     cat <<EOF
