@@ -126,6 +126,8 @@ EOF
   echo "Retrieve it $RECEIVECMD $EXTRA"
   echo
   echo "Or, with IPFS Companion: ipfs://$CIDBASE32"
+  echo
+  echo "For a list of public IPFS gateways, see https://ipfs.github.io/public-gateway-checker/"
 
   exit 0
   ;;
